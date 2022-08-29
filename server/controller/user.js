@@ -2,12 +2,12 @@ const {User} = require("../database/user");
 const connectDatabase = require("../database/index");
 const mongoose = require("mongoose");
 const {Schema, model} = mongoose;
-
-
+const bcrypt = require('bcryptjs');
+const jwt = require("jsonwebtoken");
 
 async function addUser(req,res){
 
-    let {email, password, phone} = req.body;
+    let {email, password, ip_address} = req.body;
 
     let exist = await User.findOne({email})
     console.log(exist);
@@ -16,13 +16,15 @@ async function addUser(req,res){
         res.status(400).end("exist");
         return;
     }
+
+    password = bcrypt.hash(password, 16);
+
     User.create({
         email,
         password,
-        phone
+        ip_address
     });
-    console.log(req.body);
-    res.end("Data Set Successfully");
+    res.status(200).end("Data Set Successfully");
 }
 
 async function findUser(req,res){
