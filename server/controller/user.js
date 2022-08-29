@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const {Schema, model} = mongoose;
 const bcrypt = require('bcryptjs');
 const jwt = require("jsonwebtoken");
+const key = "masaischool";
 
 async function addUser(req,res){
 
@@ -17,13 +18,16 @@ async function addUser(req,res){
         return;
     }
 
-    password = bcrypt.hash(password, 16);
+    // var hash = bcrypt.hashSync('bacon', 8);
+    password = bcrypt.hashSync(password, 16);
 
     User.create({
         email,
         password,
         ip_address
     });
+    console.log("Inside correct function")
+    console.log(password);
     res.status(200).end("Data Set Successfully");
 }
 
@@ -34,14 +38,33 @@ async function findUser(req,res){
     console.log(exist);
     if(exist !== null){
         console.log("Yes it exist");
-        res.status(200).end("exist");
-        return;
+        const isPassword = bcrypt.compareSync(password, exist.password);
+
+        let {email,ip_address} = exist;
+
+        if(isPassword){
+            let token = jwt.sign({email,ip_address},key);
+            res.status(200).send({
+                token,
+                userdetails:{
+                    email
+                }
+            })
+            res.end();
+        }
+        else{
+            res.status(200).send("Incorrect Password");
+            res.end();
+        }
+
     }
     else{
         res.status(400).end("Don't exist");
     }
 
 }
+
+// async function isLoggedin()
 
 module.exports={
     addUser,
